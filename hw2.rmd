@@ -1,0 +1,27 @@
+---
+title: "Visual Data Exploration"
+author: "Bridget Viravouth & Vinny Nguyen"
+date: "2025-05-01"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list = ls()) # to rm all variables from the environment
+
+library(tidyverse)
+library(ggplot2)
+```
+
+```{r}
+df <- read_csv("./fec_2008-2022.csv")
+head(df)
+# colnames(df) 
+dim(df) # 26828 rows x 51 columns
+```
+
+```{r}
+df_1 <- df %>% select(Cand_Party_Affiliation)
+head(df_1)
+```
+
