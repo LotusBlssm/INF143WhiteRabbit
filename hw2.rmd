@@ -12,6 +12,7 @@ rm(list = ls()) # to rm all variables from the environment
 library(tidyverse)
 library(ggplot2)
 library(dplyr)
+library(tidyquery) # for SQL queries in R
 ```
 
 ```{r}
@@ -27,10 +28,9 @@ head(df1)
 ```
 
 ```{r}
-library(tidyquery)
-
 party_table <- query("SELECT Cand_Party_Affiliation AS Party, COUNT(*) AS Count
 FROM df
+WHERE Cand_Office = 'P'
 GROUP BY Party
 ORDER BY Count DESC
 LIMIT 5")
@@ -39,7 +39,20 @@ party_table
 
 # Create a bar plot of the top 5 political parties
 ggplot(data = party_table) + geom_col(mapping = aes(x = reorder(Party, -Count), y = Count, fill = Party)) +
-  labs(x = "Political Party", y = "Number of Candidates")
+  labs(x = "Political Party", y = "Number of Presedential Candidates")
 
-ggsave("./INF143WhiteRabbit/plots/party_plot.png", width = 8, height = 6, dpi = 300)
+ggsave("./INF143WhiteRabbit/plots/president_plot.png", width = 8, height = 6, dpi = 300)
+```
+
+```{r}
+library(gapminder)
+
+ ggplot(gapminder[which($Cand_State),],  
+           aes(x=reorder(country, lifeExp, function(x){x[length(x)]}),
+               y=year, fill=lifeExp)) + 
+               geom_tile() + 
+               coord_flip() + 
+           labs(x = "", y = "Year”, fill = "Life Expectancy (yr)") + 
+           scale_fill_viridis_c(option = "magma")
+Cand_State
 ```
