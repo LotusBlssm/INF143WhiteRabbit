@@ -11,17 +11,34 @@ rm(list = ls()) # to rm all variables from the environment
 
 library(tidyverse)
 library(ggplot2)
+library(dplyr)
 ```
 
 ```{r}
-df <- read_csv("./fec_2008-2022.csv")
+df <- read_csv("./INF143WhiteRabbit/fec_2008-2022.csv")
 head(df)
-# colnames(df) 
+# colnames(df)
 dim(df) # 26828 rows x 51 columns
 ```
 
 ```{r}
-df_1 <- df %>% select(Cand_Party_Affiliation)
-head(df_1)
+df1 <- df %>% dplyr::select("Cand_Id", "Cand_Name", "Cand_Party_Affiliation")
+head(df1)
 ```
 
+```{r}
+library(tidyquery)
+
+party_table <- query("SELECT Cand_Party_Affiliation AS Party, COUNT(*) AS Count
+FROM df
+GROUP BY Party
+ORDER BY Count DESC
+LIMIT 5")
+
+party_table
+
+ggplot(data = party_table) + geom_col(mapping = aes(x = Party, y = Count, fill = Party)) +
+  labs(x = "Political Party", y = "Number of Candidates")
+
+ggsave("./INF143WhiteRabbit/plots/party_plot.png", width = 8, height = 6, dpi = 300)
+```
