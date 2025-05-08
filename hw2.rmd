@@ -37,7 +37,8 @@ LIMIT 5")
 
 party_table
 
-ggplot(data = party_table) + geom_col(mapping = aes(x = Party, y = Count, fill = Party)) +
+# Create a bar plot of the top 5 political parties
+ggplot(data = party_table) + geom_col(mapping = aes(x = reorder(Party, -Count), y = Count, fill = Party)) +
   labs(x = "Political Party", y = "Number of Candidates")
 
 ggsave("./INF143WhiteRabbit/plots/party_plot.png", width = 8, height = 6, dpi = 300)
