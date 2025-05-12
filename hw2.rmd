@@ -16,7 +16,12 @@ library(tidyquery) # for SQL queries in R
 ```
 
 ```{r}
+# df <- read_csv("./fec_2008-2022.csv")
+# df <- read_csv("./INF143WhiteRabbit/fec_2008-2022.csv")
 df <- read_csv("https://www.ics.uci.edu/~algol/teaching/s2022-IV/fec_2008-2022.csv")
+#    This line of code is for Vinny to run the code on his local machine :)
+glimpse(df) # like head() but transposes the view
+```
 
 glimpse(df)
 ```
@@ -133,8 +138,89 @@ ggplot(q1, aes(x = Total_Contribution, y = Total_Loan,
 
 ggsave("plots/loan_vs_contributions_pres.png", width = 8, height = 6, dpi = 300)
 ```
-
+# HeatMap?
 ```{r}
+library(gapminder)
+
+ ggplot(gapminder[which(df$Cand_State),],  
+           aes(x=reorder(country, lifeExp, function(x){x[length(x)]}),
+               y=year, fill=lifeExp)) + 
+               geom_tile() + 
+               coord_flip() + 
+           labs(x = "", y = "Year", fill = "Life Expectancy (yr)") + 
+           scale_fill_viridis_c(option = "magma")
+Cand_State
+```
+
+# Line Graph comparing Democrats and Republicans and 
+#      the Total Loan vs Total Loan repayment
+```{r}
+total_loan_df <- df %>%
+  filter(Cand_Party_Affiliation %in% c("DEM", "REP"))
+summary_df <- total_loan_df %>% 
+  group_by(Cand_Party_Affiliation) %>%
+  summarise(Total_Loan = sum(Total_Loan, na.rm = TRUE), 
+            Total_Loan_Repayment = sum(Total_Loan_Repayment, na.rm = TRUE)) %>%
+
+ggplot(summary_df, aes(x = Total_Loan, y = Total_Loan_Repayment, color = Cand_Party_Affiliation)) +
+  geom_point(size = 4) +
+  geom_line(aes(group = 1), linewidth = 1) +
+  labs(title = "Loan vs. Loan Repayment by Party",
+       x = "Total Loan ($)",
+       y = "Total Loan Repayment ($)",
+       color = "Party") +
+  scale_x_continuous(labels = scales::label_dollar()) +
+  scale_y_continuous(labels = scales::label_dollar()) +
+  theme_minimal()
+
+```
+
+# Ridgeline Plot showing the Average Total Contributions for each year of the campaign (2008 - 2020)
+
+# Mirrored Bar Graph of Democrats/Republicans and State vs. Total Receipts
+```{r}
+# Democrats
+democrat_avg_receipt_by_state <- df %>%
+  filter(Cand_Party_Affiliation == "DEM", !is.na(Total_Receipt)) %>%
+  group_by(Cand_State) %>%
+  summarise(Average_Receipt = mean(Total_Receipt, na.rm = TRUE)) %>%
+  mutate(Party = "Democrat")
+
+# Republicans
+republican_avg_receipt_by_state <- df %>%
+  filter(Cand_Party_Affiliation == "REP", !is.na(Total_Receipt)) %>%
+  group_by(Cand_State) %>%
+  summarise(Average_Receipt = mean(Total_Receipt, na.rm = TRUE)) %>%
+  mutate(Party = "Republican", Average_Receipt = -Average_Receipt)  # NEGATE to flip
+
+combined_data <- bind_rows(democrat_avg_receipt_by_state, republican_avg_receipt_by_state)
+
+str(democrat_avg_receipt_by_state)
+length(democrat_avg_receipt_by_state) 
+
+print(democrat_avg_receipt_by_state)
+
+ggplot(combined_data, aes(x = reorder(Cand_State, abs(Average_Receipt)), y = Average_Receipt, fill = Party)) +
+  geom_col() +
+  coord_flip() +
+  scale_y_continuous(
+    labels = function(x) scales::label_dollar()(abs(x))
+  ) +
+  scale_fill_manual(values = c("Democrat" = "blue", "Republican" = "red")) +
+  labs(
+    title = "Average Total Receipts by State (Democrats vs Republicans)",
+    x = "State",
+    y = "Average Receipt ($, mirrored)",
+    fill = "Party"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.background = element_rect(fill = "white", color = NA),
+    panel.background = element_rect(fill = "white", color = NA),
+    axis.text.y = element_text(size = 8)
+  )
+
+ggsave("./INF143WhiteRabbit/plots/mirrored_receipt_by_state.png", width = 10, height = 7, dpi = 300, bg = "white")
 df <- df %>%
   rename(Party = Cand_Party_Affiliation,
          Office = Cand_Office)
