@@ -138,19 +138,6 @@ ggplot(q1, aes(x = Total_Contribution, y = Total_Loan,
 
 ggsave("plots/loan_vs_contributions_pres.png", width = 8, height = 6, dpi = 300)
 ```
-# HeatMap?
-```{r}
-library(gapminder)
-
- ggplot(gapminder[which(df$Cand_State),],  
-           aes(x=reorder(country, lifeExp, function(x){x[length(x)]}),
-               y=year, fill=lifeExp)) + 
-               geom_tile() + 
-               coord_flip() + 
-           labs(x = "", y = "Year", fill = "Life Expectancy (yr)") + 
-           scale_fill_viridis_c(option = "magma")
-Cand_State
-```
 
 # Line Graph comparing Democrats and Republicans and 
 #      the Total Loan vs Total Loan repayment
@@ -174,8 +161,6 @@ ggplot(summary_df, aes(x = Total_Loan, y = Total_Loan_Repayment, color = Cand_Pa
   theme_minimal()
 
 ```
-
-# Ridgeline Plot showing the Average Total Contributions for each year of the campaign (2008 - 2020)
 
 # Mirrored Bar Graph of Democrats/Republicans and State vs. Total Receipts
 ```{r}
