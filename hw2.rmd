@@ -243,7 +243,7 @@ ggplot(q2, aes(x = Total_Contribution, y = Total_Loan,
   labs(x = "Total Campaign Contributions (USD)",
        y = "Total Campaign Loans (USD)",
        title = "Contributions vs Loans") +
-  facet_grid(Office ~ .) +  # Changed from facet_wrap to facet_grid
+  facet_grid(Office ~ .) + 
   scale_x_log10(labels = scales::label_number(prefix = "$", 
                                             big.mark = ",",
                                             accuracy = 1)) +
@@ -255,7 +255,7 @@ ggplot(q2, aes(x = Total_Contribution, y = Total_Loan,
     axis.title = element_text(size = 20),
     plot.title = element_text(size = 25, face = "bold"),
     plot.subtitle = element_text(size = 18),
-    strip.text = element_text(size = 16)  # Added to control facet label size
+    strip.text = element_text(size = 16) 
   )
 
 # Adjust height to accommodate vertical stacking
@@ -263,5 +263,35 @@ ggsave("plots/stacked_office_plots.png", width = 8, height = 12, dpi = 300)
 ```
 
 ```{r}
-q3 <- query("")
+q3 <- query("SELECT Cand_State, Party, COUNT(Party) AS Total
+FROM df
+WHERE Cand_State = 'CA' OR  Cand_State = 'TX' OR  Cand_State = 'AZ' OR Cand_State = 'NV' OR  Cand_State = 'KS'
+GROUP BY Cand_State, Party")
+
+q3
+
+q4 <- query("SELECT * 
+FROM q3 
+WHERE Party = 'DEM' OR Party = 'REP' OR Party = 'IND'")
+
+q4
+
+ggplot(q4, aes(x = reorder(Cand_State, -Total), y = Total, fill = Party)) +
+  geom_bar(stat = "identity") +
+  labs(x = "State", y = "Number of Canidates") +
+  scale_fill_manual(values = c("DEM" = "#3e32f4",
+                               "REP" = "#f43e32",
+                               "IND" = "#32f43e"))
+```
+
+```{r}
+
+ggplot(q4, aes(x = reorder(Party, -Total), y = Total, fill = Party)) +
+  geom_col() +
+  facet_grid(. ~ Cand_State) +
+  labs(x = "State", y = "Number of Canidates") +
+  scale_fill_manual(values = c("DEM" = "#3e32f4",
+                               "REP" = "#f43e32",
+                               "IND" = "#32f43e"))
+ggsave("plots/party_by_state.png", width = 8, height = 6, dpi = 300)
 ```
