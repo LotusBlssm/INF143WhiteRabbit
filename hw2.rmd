@@ -40,7 +40,7 @@ LIMIT 5")
 
 ggplot(data = party_table) + geom_col(mapping = aes(x = reorder(Party, -Count), y = Count, fill = Party)) +
   labs(x = "Political Party",
-       y = "Number of Presedential Candidates",
+       y = "Number of Candidates",
        title = "Top 5 Political Parties by Candidates",
        subtitle = "All Candidates Presidents, House, and Senate") +
   theme(
@@ -121,8 +121,6 @@ ggplot(dem, aes(x = Individual_Contribution)) +
 ```
 
 ```{r}
-df <- df %>%
-  rename(Party = Cand_Party_Affiliation)
 
 q1 <- query("SELECT Cand_Id, Total_Contribution, Total_Loan, Party, Cand_Office
 FROM df
