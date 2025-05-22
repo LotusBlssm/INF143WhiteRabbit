@@ -13,6 +13,7 @@ library(tidyverse)
 library(ggplot2)
 library(dplyr)
 library(tidyquery) # for SQL queries in R
+library(hexbin)
 ```
 
 ```{r}
@@ -28,4 +29,30 @@ df <- df %>%
 df$Office[df$Office == "P"] <- "President"
 df$Office[df$Office == "S"] <- "Senate"
 df$Office[df$Office == "H"] <- "House"
+```
+
+```{r}
+q1 <- query("SELECT Party, Total_Contribution, Total_Disbursement
+FROM df
+WHERE Total_Disbursement > 0 AND Total_Contribution > 0")
+
+q2 <- query("SELECT * FROM q1 WHERE Party = 'DEM' OR Party = 'REP'")
+
+ggplot(q2, aes(x = Total_Contribution, y = Total_Disbursement, color = Party)) +
+  geom_point() +
+  labs(title = "Total Contribution vs. Total Disbursement",
+       x = "Total Contribution",
+       y = "Total Disbursement") +
+  scale_x_log10(labels = scales::label_number(prefix = "$",
+                                              big.mark = ",",
+                                              accuracy = 1, )) +
+  scale_y_log10(labels = scales::label_number(prefix = "$",
+                                              big.mark = ",",
+                                              accuracy = 1)) +
+  theme(
+    axis.text = element_text(size = 15), # numbers
+    axis.title = element_text(size = 20),
+    plot.title = element_text(size = 25, face = "bold"),
+    plot.subtitle = element_text(size = 18),
+  )
 ```
