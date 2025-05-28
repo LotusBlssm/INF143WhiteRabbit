@@ -32,6 +32,7 @@ df$Office[df$Office == "H"] <- "House"
 ```
 
 ```{r}
+# CONTRIBUTION VS DISBURSEMENT HEXBIN PLOT
 q1 <- query("SELECT Party, Total_Contribution, Total_Disbursement
 FROM df
 WHERE Total_Disbursement > 0 AND Total_Contribution > 0")
@@ -42,6 +43,7 @@ ggplot(q1, aes(x = Total_Contribution, y = Total_Disbursement)) +
   geom_hex(aes(fill = ..count..), bins = 50) + # Note: using fill instead of colour for hex bins
   coord_equal() +
   labs(title = "Total Contribution vs. Total Disbursement",
+       subtitle = "Democratic vs Republican Party",
        x = "Total Contribution",
        y = "Total Disbursement") +
   scale_x_log10(labels = scales::label_number(prefix = "$",
@@ -56,4 +58,111 @@ ggplot(q1, aes(x = Total_Contribution, y = Total_Disbursement)) +
     plot.title = element_text(size = 25, face = "bold"),
     plot.subtitle = element_text(size = 18)
   )
+
+ggsave("./INF143WhiteRabbit/plots_hw3/disburstment_vs_contribution_hex.png", width = 10, height = 6, dpi = 300)
+```
+
+```{r}
+# CONTRIBUTION VS DISBURSEMENT SCATTER PLOT
+
+ggplot(q2, aes(x = Total_Contribution, y = Total_Disbursement, color = Party)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(aes(color = "black"), method = "loess", linewidth = 2,
+              na.rm = TRUE, se = FALSE) +
+  coord_equal() +
+  facet_grid(~ Party) +
+  scale_color_manual(values = c("DEM" = "blue", "REP" = "red")) +
+  labs(title = "Total Contribution vs. Total Disbursement",
+       subtitle = "Democratic (DEM) vs Republican (REP) Party Scatter Plot",
+       x = "Total Contribution",
+       y = "Total Disbursement") +
+  scale_x_log10(labels = scales::label_number(prefix = "$",
+                                              big.mark = ",",
+                                              accuracy = 1)) +
+  scale_y_log10(labels = scales::label_number(prefix = "$",
+                                              big.mark = ",",
+                                              accuracy = 1)) +
+  theme(
+    axis.text = element_text(size = 10),
+    axis.title = element_text(size = 20),
+    plot.title = element_text(size = 25, face = "bold"),
+    plot.subtitle = element_text(size = 18)
+  )
+
+ggsave("./INF143WhiteRabbit/plots_hw3/disburstment_vs_contribution_smooth_scatter.png", width = 10, height = 6, dpi = 300)
+```
+
+```{r}
+# CONTRIBUTION VS DISBURSEMENT DENSITY PLOT
+ggplot(q2, aes(x = Total_Contribution, y = Total_Disbursement, color = Party)) +
+  geom_density_2d() +
+  facet_wrap(~ Party) +
+  scale_color_manual(values = c("DEM" = "blue", "REP" = "red")) +
+  coord_equal() +
+  coord_flip() +
+  labs(title = "Total Contribution vs. Total Disbursement by Party",
+       subtitle = "Democratic (DEM) vs Republican (REP) Party Density Plot",
+       x = "Total Contribution",
+       y = "Total Disbursement") +
+  scale_x_log10(labels = scales::label_number(prefix = "$",
+                                            big.mark = ",",
+                                            accuracy = 1)) +
+  scale_y_log10(labels = scales::label_number(prefix = "$",
+                                            big.mark = ",",
+                                            accuracy = 1)) +
+  theme(
+    axis.text = element_text(size = 10),
+    axis.title = element_text(size = 20),
+    plot.title = element_text(size = 25, face = "bold"),
+    plot.subtitle = element_text(size = 18)
+  )
+
+ggsave("./INF143WhiteRabbit/plots_hw3/disburstment_vs_contribution_density.png", width = 10, height = 6, dpi = 300)
+```
+
+```{r}
+# TIME SERIES PLOT
+
+# remove NAs 
+df <- df %>%
+  filter(!is.na(Coverage_Start_Date) & !is.na(Coverage_End_Date))
+
+years <- query("
+  SELECT 
+    Coverage_Start_Year,
+    Party,
+    SUM(Total_Contribution) as Total_Contribution,
+    SUM(Total_Disbursement) as Total_Disbursement
+  FROM df
+  WHERE Party IN ('DEM', 'REP')
+  GROUP BY Coverage_Start_Year, Party
+")
+
+ggplot(years, aes(x = Coverage_Start_Year)) +
+  geom_line(aes(y = Total_Contribution, linetype = "Contributions"), size = 1) +
+  geom_line(aes(y = Total_Disbursement, linetype = "Disbursements"), size = 1) +
+  geom_point(aes(y = Total_Contribution), size = 2) +
+  geom_point(aes(y = Total_Disbursement), size = 2) +
+  scale_linetype_manual(values = c("Contributions" = "solid", "Disbursements" = "dashed")) +
+  labs(title = "Contributions and Disbursements Over Time",
+       subtitle = "Democratic (DEM) vs Republican (REP) Party",
+       x = "Year",
+       y = "Amount (USD)",
+       color = "Party",
+       linetype = "Type") +
+  scale_y_log10(labels = scales::label_number(prefix = "$",
+                                            big.mark = ",",
+                                            accuracy = 1)) +
+  theme(
+    axis.text = element_text(size = 10),
+    axis.title = element_text(size = 20),
+    plot.title = element_text(size = 25, face = "bold"),
+    plot.subtitle = element_text(size = 18),
+    legend.position = "bottom",
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 10)
+  )
+
+ggsave("./INF143WhiteRabbit/plots_hw3/contributions_disbursements_time_series.png", 
+       width = 12, height = 8, dpi = 300)
 ```
