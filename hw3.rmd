@@ -34,12 +34,36 @@ df$Office[df$Office == "H"] <- "House"
 ```
 
 ```{r}
-# CONTRIBUTION VS DISBURSEMENT HEXBIN PLOT
+# RUN THIS CODE! queries and data cleaning
+
+df <- df %>%
+  filter(!is.na(Coverage_Start_Date) & !is.na(Coverage_End_Date) & !is.na(Coverage_Start_Date) & !is.na(Cand_Id) & !is.na(Cand_State) & Total_Contribution > 0 & Total_Contribution > 0)
+
+date <- as.Date(df$Coverage_Start_Date, format = "%m/%d/%Y")
+
+years <- as.numeric(format(date, "%Y"))
+
+df$Coverage_Start_Year <- years
+
 q1 <- query("SELECT Party, Total_Contribution, Total_Disbursement
 FROM df
 WHERE Total_Disbursement > 0 AND Total_Contribution > 0")
 
 q2 <- query("SELECT * FROM q1 WHERE Party = 'DEM' OR Party = 'REP'")
+
+q3 <- query("SELECT Party, Coverage_Start_Year, SUM(Total_Contribution) as Total_Contributions, SUM(Total_Disbursement) as Total_Disbursements
+FROM df
+WHERE Party = 'DEM' OR Party = 'REP'
+GROUP BY Party, Coverage_Start_Year
+ORDER BY Coverage_Start_Year")
+
+q4 <- query("SELECT Cand_State as state, COUNT(DISTINCT Cand_Id) as Total_Candidates
+FROM df
+GROUP BY Cand_State")
+```
+
+```{r}
+# CONTRIBUTION VS DISBURSEMENT HEXBIN PLOT
 
 ggplot(q1, aes(x = Total_Contribution, y = Total_Disbursement)) +
   geom_hex(aes(fill = ..count..), bins = 50) + # Note: using fill instead of colour for hex bins
@@ -124,23 +148,6 @@ ggsave("./INF143WhiteRabbit/plots_hw3/disburstment_vs_contribution_density.png",
 
 ```{r}
 # TIME SERIES PLOT
-
-# remove NAs 
-df <- df %>%
-  filter(!is.na(Coverage_Start_Date) & !is.na(Coverage_End_Date) & !is.na(Coverage_Start_Date) & !is.na(Cand_Id) & !is.na(Cand_State) & Total_Contribution > 0 & Total_Contribution > 0)
-
-date <- as.Date(df$Coverage_Start_Date, format = "%m/%d/%Y")
-
-years <- as.numeric(format(date, "%Y"))
-
-df$Coverage_Start_Year <- years
-
-q3 <- query("SELECT Party, Coverage_Start_Year, SUM(Total_Contribution) as Total_Contributions, SUM(Total_Disbursement) as Total_Disbursements
-FROM df
-WHERE Party = 'DEM' OR Party = 'REP'
-GROUP BY Party, Coverage_Start_Year
-ORDER BY Coverage_Start_Year")
-
 q3
 
 ggplot(q3, aes(x = Coverage_Start_Year, y = Total_Contributions, color = Party)) + 
@@ -170,13 +177,6 @@ ggsave("./bridget/INF143WhiteRabbit/plots_hw3/contributions_disbursements_time_s
 
 ```{r}
 # chrolopleth map (STATES)
-
-print(df$Cand_State == 'HI')
-
-q4 <- query("SELECT Cand_State as state, COUNT(DISTINCT Cand_Id) as Total_Candidates
-FROM df
-GROUP BY Cand_State")
-
 q4
 
 plot_usmap(data = q4, values = "Total_Candidates", regions = "states", include = c("CA", "OR", "WA", "NV", "AK", "HI", "AZ", "UT", "ID")) + 
