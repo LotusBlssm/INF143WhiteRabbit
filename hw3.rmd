@@ -14,6 +14,8 @@ library(ggplot2)
 library(dplyr)
 library(tidyquery) # for SQL queries in R
 library(hexbin)
+library(sf)        # for Shapes
+library(usmap)     # for the US Map
 ```
 
 ```{r}
@@ -125,27 +127,27 @@ ggsave("./INF143WhiteRabbit/plots_hw3/disburstment_vs_contribution_density.png",
 
 # remove NAs 
 df <- df %>%
-  filter(!is.na(Coverage_Start_Date) & !is.na(Coverage_End_Date))
+  filter(!is.na(Coverage_Start_Date) & !is.na(Coverage_End_Date) & !is.na(Coverage_Start_Date) & !is.na(Cand_Id) & !is.na(Cand_State) & Total_Contribution > 0 & Total_Contribution > 0)
 
-years <- query("
-  SELECT 
-    Coverage_Start_Year,
-    Party,
-    SUM(Total_Contribution) as Total_Contribution,
-    SUM(Total_Disbursement) as Total_Disbursement
-  FROM df
-  WHERE Party IN ('DEM', 'REP')
-  GROUP BY Coverage_Start_Year, Party
-")
+date <- as.Date(df$Coverage_Start_Date, format = "%m/%d/%Y")
 
-ggplot(years, aes(x = Coverage_Start_Year)) +
-  geom_line(aes(y = Total_Contribution, linetype = "Contributions"), size = 1) +
-  geom_line(aes(y = Total_Disbursement, linetype = "Disbursements"), size = 1) +
-  geom_point(aes(y = Total_Contribution), size = 2) +
-  geom_point(aes(y = Total_Disbursement), size = 2) +
-  scale_linetype_manual(values = c("Contributions" = "solid", "Disbursements" = "dashed")) +
-  labs(title = "Contributions and Disbursements Over Time",
-       subtitle = "Democratic (DEM) vs Republican (REP) Party",
+years <- as.numeric(format(date, "%Y"))
+
+df$Coverage_Start_Year <- years
+
+q3 <- query("SELECT Party, Coverage_Start_Year, SUM(Total_Contribution) as Total_Contributions, SUM(Total_Disbursement) as Total_Disbursements
+FROM df
+WHERE Party = 'DEM' OR Party = 'REP'
+GROUP BY Party, Coverage_Start_Year
+ORDER BY Coverage_Start_Year")
+
+q3
+
+ggplot(q3, aes(x = Coverage_Start_Year, y = Total_Contributions, color = Party)) + 
+  geom_line(size = 1, alpha = 0.7) + 
+  scale_color_manual(values = c("DEM" = "blue", "REP" = "red")) +
+  labs(title = "Total Party Contributions Over Time",
+       subtitle = "Republican (REP) vs Democratic (DEM) Party Contributions",
        x = "Year",
        y = "Amount (USD)",
        color = "Party",
@@ -158,11 +160,29 @@ ggplot(years, aes(x = Coverage_Start_Year)) +
     axis.title = element_text(size = 20),
     plot.title = element_text(size = 25, face = "bold"),
     plot.subtitle = element_text(size = 18),
-    legend.position = "bottom",
+    legend.position = "right",
     legend.title = element_text(size = 12),
     legend.text = element_text(size = 10)
   )
 
-ggsave("./INF143WhiteRabbit/plots_hw3/contributions_disbursements_time_series.png", 
-       width = 12, height = 8, dpi = 300)
+ggsave("./bridget/INF143WhiteRabbit/plots_hw3/contributions_disbursements_time_series.png")
+```
+
+```{r}
+# chrolopleth map (STATES)
+
+print(df$Cand_State == 'HI')
+
+q4 <- query("SELECT Cand_State as state, COUNT(DISTINCT Cand_Id) as Total_Candidates
+FROM df
+GROUP BY Cand_State")
+
+q4
+
+plot_usmap(data = q4, values = "Total_Candidates", regions = "states", include = c("CA", "OR", "WA", "NV", "AK", "HI", "AZ", "UT", "ID")) + 
+  scale_fill_continuous(low = "pink", high = "purple", name = "Total Number of Candidates", label = scales::comma) + 
+  labs(title = "U.S. States",
+       subtitle = "This is a blank map of the states on the West Cost of the United States.") + 
+  theme(panel.background=element_blank())
+
 ```
