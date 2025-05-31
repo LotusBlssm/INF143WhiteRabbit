@@ -181,8 +181,15 @@ q4
 
 plot_usmap(data = q4, values = "Total_Candidates", regions = "states", include = c("CA", "OR", "WA", "NV", "AK", "HI", "AZ", "UT", "ID")) + 
   scale_fill_continuous(low = "pink", high = "purple", name = "Total Number of Candidates", label = scales::comma) + 
-  labs(title = "U.S. States",
-       subtitle = "This is a blank map of the states on the West Cost of the United States.") + 
-  theme(panel.background=element_blank())
+  labs(title = "Canidate Population by West Coast States",
+       subtitle = "All political offices taken into consideration.") +
+  theme(panel.background = element_rect(fill = "white"),
+        plot.title = element_text(size = 25, face = "bold"),
+        plot.subtitle = element_text(size = 18),
+        legend.position = "bottom",
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 10))
+
+ggsave("./INF143WhiteRabbit/plots_hw3/chrolopleth_map_states.png", width = 10, height = 6, dpi = 300)
 
 ```
