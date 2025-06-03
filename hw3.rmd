@@ -66,26 +66,34 @@ GROUP BY Cand_State")
 # CONTRIBUTION VS DISBURSEMENT HEXBIN PLOT
 
 ggplot(q1, aes(x = Total_Contribution, y = Total_Disbursement)) +
-  geom_hex(aes(fill = ..count..), bins = 50) + # Note: using fill instead of colour for hex bins
+  stat_density_2d(aes(fill = after_stat(density)), 
+                 geom = "raster",
+                 contour = FALSE) +
+  scale_fill_viridis_c() +
   coord_equal() +
   labs(title = "Total Contribution vs. Total Disbursement",
        subtitle = "Democratic vs Republican Party",
        x = "Total Contribution",
-       y = "Total Disbursement") +
+       y = "Total Disbursement",
+       fill = "Density") +
   scale_x_log10(labels = scales::label_number(prefix = "$",
                                             big.mark = ",",
-                                            accuracy = 1)) +
+                                            accuracy = 1),
+                expand = c(0, 0)) +
   scale_y_log10(labels = scales::label_number(prefix = "$",
                                             big.mark = ",",
-                                            accuracy = 1)) +
+                                            accuracy = 1),
+                expand = c(0, 0)) +
   theme(
     axis.text = element_text(size = 15),
     axis.title = element_text(size = 20),
     plot.title = element_text(size = 25, face = "bold"),
-    plot.subtitle = element_text(size = 18)
+    plot.subtitle = element_text(size = 18),
+    panel.background = element_rect(fill = "white"),
+    plot.background = element_rect(fill = "white")
   )
 
-ggsave("./INF143WhiteRabbit/plots_hw3/disburstment_vs_contribution_hex.png", width = 10, height = 6, dpi = 300)
+ggsave("./INF143WhiteRabbit/plots_hw3/WRONG_disburstment_vs_contribution_hex.png", width = 10, height = 6, dpi = 300)
 ```
 
 ```{r}
@@ -96,6 +104,7 @@ ggplot(q2, aes(x = Total_Contribution, y = Total_Disbursement, color = Party)) +
   geom_smooth(aes(color = "black"), method = "loess", linewidth = 2,
               na.rm = TRUE, se = FALSE) +
   coord_equal() +
+  coord_flip() +
   facet_grid(~ Party) +
   scale_color_manual(values = c("DEM" = "blue", "REP" = "red")) +
   labs(title = "Total Contribution vs. Total Disbursement",
@@ -152,13 +161,30 @@ q3
 
 ggplot(q3, aes(x = Coverage_Start_Year, y = Total_Contributions, color = Party)) + 
   geom_line(size = 1, alpha = 0.7) + 
+  geom_vline(xintercept = seq(2007, 2019, by = 4), linetype = "dashed", alpha = 0.3) +
+  # PARTY LABELS
+  geom_text(data = q3 %>% 
+              group_by(Party) %>% 
+              filter(Coverage_Start_Year == max(Coverage_Start_Year)),
+            aes(label = Party, 
+                x = Coverage_Start_Year + 0.7),
+            show.legend = FALSE) +
+  # IMPORTANT YEAR LABELS
+  geom_text(data = q3 %>% 
+              filter(Coverage_Start_Year %in% seq(2007, 2019, by = 4)) %>%
+              group_by(Coverage_Start_Year) %>%
+              summarize(y_pos = max(Total_Contributions)),
+            aes(x = Coverage_Start_Year, y = y_pos, 
+                label = Coverage_Start_Year),
+            color = "black",
+            fontface = "bold",
+            vjust = -1.5,
+            show.legend = FALSE) +
   scale_color_manual(values = c("DEM" = "blue", "REP" = "red")) +
   labs(title = "Total Party Contributions Over Time",
        subtitle = "Republican (REP) vs Democratic (DEM) Party Contributions",
        x = "Year",
-       y = "Amount (USD)",
-       color = "Party",
-       linetype = "Type") +
+       y = "Amount (USD)") + 
   scale_y_log10(labels = scales::label_number(prefix = "$",
                                             big.mark = ",",
                                             accuracy = 1)) +
@@ -167,12 +193,10 @@ ggplot(q3, aes(x = Coverage_Start_Year, y = Total_Contributions, color = Party))
     axis.title = element_text(size = 20),
     plot.title = element_text(size = 25, face = "bold"),
     plot.subtitle = element_text(size = 18),
-    legend.position = "right",
-    legend.title = element_text(size = 12),
-    legend.text = element_text(size = 10)
+    legend.position = "none"
   )
 
-ggsave("./bridget/INF143WhiteRabbit/plots_hw3/contributions_disbursements_time_series.png")
+ggsave("./INF143WhiteRabbit/plots_hw3/contributions_disbursements_time_series.png", width = 12, height = 10, dpi = 300)
 ```
 
 ```{r}
@@ -180,17 +204,19 @@ ggsave("./bridget/INF143WhiteRabbit/plots_hw3/contributions_disbursements_time_s
 q4
 
 plot_usmap(data = q4, values = "Total_Candidates", regions = "states", include = c("CA", "OR", "WA", "NV", "AK", "HI", "AZ", "UT", "ID")) + 
-  scale_fill_continuous(low = "pink", high = "purple", name = "Total Number of Candidates", label = scales::comma) + 
+  scale_fill_continuous(low = "purple", high = "pink", name = "Total Number of Candidates", label = scales::comma) + 
   labs(title = "Canidate Population by West Coast States",
        subtitle = "All political offices taken into consideration.") +
   theme(panel.background = element_rect(fill = "white"),
+        plot.background = element_rect(fill = "white"),
         plot.title = element_text(size = 25, face = "bold"),
         plot.subtitle = element_text(size = 18),
+        plot.title.position = "plot",
         legend.position = "bottom",
         legend.title = element_text(size = 12),
-        legend.text = element_text(size = 10))
+        legend.text = element_text(size = 12))
 
-ggsave("./INF143WhiteRabbit/plots_hw3/chrolopleth_map_states.png", width = 10, height = 6, dpi = 300)
+ggsave("./INF143WhiteRabbit/plots_hw3/chrolopleth_map_states.png", width = 12, height = 8, dpi = 300)
 
 
 
