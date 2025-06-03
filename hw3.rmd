@@ -192,4 +192,37 @@ plot_usmap(data = q4, values = "Total_Candidates", regions = "states", include =
 
 ggsave("./INF143WhiteRabbit/plots_hw3/chrolopleth_map_states.png", width = 10, height = 6, dpi = 300)
 
+
+
+```
+
+
+```{r} 
+
+# Bad visualization of the chloropleth map as an unscaled bar graph
+
+west_coast_states <- query("
+  SELECT Cand_State AS State, COUNT(*) AS Count
+  FROM df
+  WHERE Cand_State IN ('CA', 'OR', 'WA', 'NV', 'AK', 'HI', 'AZ', 'UT', 'ID')
+  GROUP BY Cand_State
+")
+
+ggplot(data = west_coast_states) + geom_col(mapping = aes(x = Cand_State, y = Count, fill = State)) +
+  labs(x = "States",
+       y = "Number of Candidates",
+       title = "Canidate Population by West Coast States",
+       subtitle = "All political offices taken into consideration.") +
+  theme(
+  axis.text = element_text(size = 15), # numbers
+  axis.title = element_text(size = 20),
+  plot.title = element_text(size = 25, face = "bold"),
+  plot.subtitle = element_text(size = 15),
+  legend.title = element_text(size = 16),
+  legend.text = element_text(size = 14),
+  legend.key.size = unit(1.5, "cm"),
+  legend.spacing = unit(0.5, "cm")
+  )
+
+ggsave("plots_hw3/bad_bar_graph_states.png", width = 8, height = 6, dpi = 300)
 ```
